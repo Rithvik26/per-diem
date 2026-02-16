@@ -1,5 +1,16 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../../.env' });
+import { join } from 'path';
+import { existsSync } from 'fs';
+
+// Load .env from project root
+// When running via npm workspaces from root, cwd is the project root
+let envPath = join(process.cwd(), '.env');
+if (!existsSync(envPath)) {
+  // Fallback: try parent directory (when running directly from apps/backend)
+  envPath = join(process.cwd(), '../../.env');
+}
+
+dotenv.config({ path: envPath });
 
 import express from 'express';
 import cors from 'cors';
@@ -9,6 +20,8 @@ import { createCacheProvider } from './services/cache.service.js';
 import { createSquareClient } from './services/square-client.service.js';
 import { requestLogger } from './middleware/request-logger.middleware.js';
 import { errorHandler } from './middleware/error-handler.middleware.js';
+import locationsRouter from './routes/locations.route.js';
+import categoriesRouter from './routes/categories.route.js';
 
 // ── Bootstrap services ──────────────────────────────────────
 
@@ -55,6 +68,10 @@ app.use('/api', limiter);
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// API routes
+app.use('/api/locations', locationsRouter);
+app.use('/api/catalog/categories', categoriesRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 

@@ -85,21 +85,17 @@ export interface SquareListLocationsResponse {
 // API Response Types (what the frontend receives)
 // ============================================================
 
-export interface LocationAddress {
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-}
-
 export interface Location {
   id: string;
   name: string;
-  address: LocationAddress | null;
+  address: {
+    address_line_1?: string;
+    locality?: string;
+    administrative_district_level_1?: string;
+    postal_code?: string;
+  };
   timezone: string;
-  status: 'ACTIVE';
+  status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface MenuItemVariation {
@@ -127,7 +123,7 @@ export interface CategoryGroup {
 export interface Category {
   id: string;
   name: string;
-  itemCount: number;
+  item_count: number;
 }
 
 // ============================================================
@@ -156,9 +152,15 @@ export type ApiResult<T> = ApiResponse<T> | ApiError;
 // Endpoint-specific Response Types
 // ============================================================
 
-export type LocationsResponse = ApiResponse<Location[]>;
+export interface LocationsResponse {
+  locations: Location[];
+}
+
+export interface CategoriesResponse {
+  categories: Category[];
+}
+
 export type CatalogResponse = ApiResponse<CategoryGroup[]>;
-export type CategoriesResponse = ApiResponse<Category[]>;
 
 // ============================================================
 // Webhook Types
