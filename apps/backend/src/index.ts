@@ -1,22 +1,72 @@
-import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
-
 dotenv.config({ path: '../../.env' });
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { config } from './services/config.service.js';
+import { createCacheProvider } from './services/cache.service.js';
+import { createSquareClient } from './services/square-client.service.js';
+import { requestLogger } from './middleware/request-logger.middleware.js';
+import { errorHandler } from './middleware/error-handler.middleware.js';
 
-app.use(cors({ origin: CORS_ORIGIN }));
-app.use(express.json());
+// ── Bootstrap services ──────────────────────────────────────
+
+const cache = createCacheProvider(config.CACHE_PROVIDER, config.CACHE_TTL_SECONDS, config.REDIS_URL);
+const squareClient = createSquareClient(config.SQUARE_BASE_URL, config.SQUARE_ACCESS_TOKEN);
+
+// Make services available to route handlers via app.locals
+const app = express();
+app.locals.cache = cache;
+app.locals.squareClient = squareClient;
+app.locals.config = config;
+
+// ── Global middleware ───────────────────────────────────────
+
+app.use(requestLogger);
+
+app.use(
+  cors({
+    origin: config.CORS_ORIGIN,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  }),
+);
+
+app.use(express.json({ limit: '1mb' }));
+
+// Rate limiter: 50 requests per minute per IP
+const limiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: config.RATE_LIMIT_MAX_REQUESTS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: 'RATE_LIMITED',
+      message: 'Too many requests, please try again later',
+    },
+  },
+});
+app.use('/api', limiter);
+
+// ── Routes ──────────────────────────────────────────────────
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.info(`[server] Running on http://localhost:${PORT}`);
+// ── Error handler (must be last) ────────────────────────────
+
+app.use(errorHandler);
+
+// ── Start server ────────────────────────────────────────────
+
+app.listen(config.PORT, () => {
+  console.info(`[server] Running on http://localhost:${config.PORT}`);
+  console.info(`[server] Environment: ${config.NODE_ENV}`);
+  console.info(`[server] Cache provider: ${config.CACHE_PROVIDER}`);
+  console.info(`[server] Square environment: ${config.SQUARE_ENVIRONMENT}`);
 });
 
 export default app;
