@@ -10,6 +10,9 @@ build/
 .env.local
 .env.*.local
 
+# Scripts with hardcoded credentials
+apps/backend/scripts/
+
 # IDE
 .vscode/
 .idea/
