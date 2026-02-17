@@ -2,7 +2,11 @@ import type {
   SquareCatalogObject,
   SquareCatalogItem,
   SquareCatalogCategory,
+  SquareCatalogImage,
   Category,
+  MenuItem,
+  MenuItemVariation,
+  CategoryGroup,
 } from '@per-diem/shared-types';
 
 /**
@@ -114,4 +118,135 @@ export function filterItemsByLocation(
       item.present_at_location_ids?.includes(locationId)
     );
   });
+}
+
+/**
+ * Finds an image URL by ID in the related_objects array.
+ *
+ * @param imageId - Square image ID
+ * @param relatedObjects - Square API related_objects array
+ * @returns Image URL, or null if not found
+ */
+export function findImageUrl(
+  imageId: string,
+  relatedObjects: SquareCatalogObject[],
+): string | null {
+  for (const obj of relatedObjects) {
+    if (obj.type === 'IMAGE' && obj.id === imageId) {
+      return (obj as SquareCatalogImage).image_data.url;
+    }
+  }
+  return null;
+}
+
+/**
+ * Formats a Square Money amount (in cents) as a USD string.
+ *
+ * @param cents - Amount in cents
+ * @returns Formatted price string (e.g., "$12.50")
+ */
+export function formatPrice(cents: number): string {
+  const dollars = cents / 100;
+  return `$${dollars.toFixed(2)}`;
+}
+
+/**
+ * Transforms a Square catalog item into a simplified MenuItem.
+ *
+ * Joins related_objects to resolve:
+ * - Category name (via category_id)
+ * - Image URL (via image_ids[0])
+ * - Variations with formatted prices
+ *
+ * @param item - Square CatalogItem
+ * @param relatedObjects - Square API related_objects array
+ * @returns Transformed MenuItem
+ */
+export function transformCatalogItem(
+  item: SquareCatalogItem,
+  relatedObjects: SquareCatalogObject[],
+): MenuItem {
+  // Resolve category name
+  const categoryName = item.item_data.category_id
+    ? findCategoryName(item.item_data.category_id, relatedObjects) ?? 'Uncategorized'
+    : 'Uncategorized';
+
+  // Resolve image URL (use first image if multiple exist)
+  const imageUrl = item.item_data.image_ids?.[0]
+    ? findImageUrl(item.item_data.image_ids[0], relatedObjects)
+    : null;
+
+  // Transform variations
+  const variations: MenuItemVariation[] = (item.item_data.variations ?? []).map((v) => ({
+    id: v.id,
+    name: v.item_variation_data.name,
+    priceDollars: (v.item_variation_data.price_money?.amount ?? 0) / 100,
+    priceFormatted: formatPrice(v.item_variation_data.price_money?.amount ?? 0),
+  }));
+
+  return {
+    id: item.id,
+    name: item.item_data.name,
+    description: item.item_data.description,
+    category: categoryName,
+    image_url: imageUrl ?? undefined,
+    variations,
+  };
+}
+
+/**
+ * Groups menu items by category name.
+ *
+ * This is the final transformation for the GET /api/catalog endpoint.
+ *
+ * Process:
+ * 1. Transform all Square CatalogItems to MenuItems (joining related_objects)
+ * 2. Group MenuItems by their category name
+ * 3. Build CategoryGroup array with category name + items
+ * 4. Sort categories alphabetically
+ *
+ * @param items - Filtered Square catalog items (already scoped to location)
+ * @param relatedObjects - Square API related_objects array
+ * @returns Array of CategoryGroup objects sorted by category name
+ */
+export function groupItemsByCategory(
+  items: SquareCatalogItem[],
+  relatedObjects: SquareCatalogObject[],
+): CategoryGroup[] {
+  // Transform all items
+  const menuItems = items.map((item) => transformCatalogItem(item, relatedObjects));
+
+  // Group by category
+  const categoryMap = new Map<string, MenuItem[]>();
+
+  for (const item of menuItems) {
+    const existing = categoryMap.get(item.category) ?? [];
+    existing.push(item);
+    categoryMap.set(item.category, existing);
+  }
+
+  // Build CategoryGroup array with category IDs
+  const categoryGroups: CategoryGroup[] = [];
+
+  for (const [categoryName, items] of categoryMap.entries()) {
+    // Find category ID from related_objects
+    let categoryId = '';
+    for (const obj of relatedObjects) {
+      if (obj.type === 'CATEGORY' && (obj as SquareCatalogCategory).category_data.name === categoryName) {
+        categoryId = obj.id;
+        break;
+      }
+    }
+
+    categoryGroups.push({
+      category: categoryName,
+      categoryId: categoryId || 'uncategorized',
+      items,
+    });
+  }
+
+  // Sort alphabetically by category name
+  categoryGroups.sort((a, b) => a.category.localeCompare(b.category));
+
+  return categoryGroups;
 }

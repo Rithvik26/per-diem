@@ -1,4 +1,16 @@
 import { z } from 'zod';
+import dotenv from 'dotenv';
+import { join } from 'path';
+import { existsSync } from 'fs';
+
+// Load .env file BEFORE validation
+// This runs when the module is imported, ensuring env vars are available
+let envPath = join(process.cwd(), '.env');
+if (!existsSync(envPath)) {
+  // Fallback: try parent directory (when running from apps/backend)
+  envPath = join(process.cwd(), '../../.env');
+}
+dotenv.config({ path: envPath });
 
 /**
  * Zod schema that validates all required environment variables.

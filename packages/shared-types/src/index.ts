@@ -108,9 +108,9 @@ export interface MenuItemVariation {
 export interface MenuItem {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   category: string;
-  imageUrl: string | null;
+  image_url?: string;
   variations: MenuItemVariation[];
 }
 
@@ -160,7 +160,9 @@ export interface CategoriesResponse {
   categories: Category[];
 }
 
-export type CatalogResponse = ApiResponse<CategoryGroup[]>;
+export interface CatalogResponse {
+  categories: CategoryGroup[];
+}
 
 // ============================================================
 // Webhook Types

@@ -1,17 +1,3 @@
-import dotenv from 'dotenv';
-import { join } from 'path';
-import { existsSync } from 'fs';
-
-// Load .env from project root
-// When running via npm workspaces from root, cwd is the project root
-let envPath = join(process.cwd(), '.env');
-if (!existsSync(envPath)) {
-  // Fallback: try parent directory (when running directly from apps/backend)
-  envPath = join(process.cwd(), '../../.env');
-}
-
-dotenv.config({ path: envPath });
-
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -22,6 +8,8 @@ import { requestLogger } from './middleware/request-logger.middleware.js';
 import { errorHandler } from './middleware/error-handler.middleware.js';
 import locationsRouter from './routes/locations.route.js';
 import categoriesRouter from './routes/categories.route.js';
+import catalogRouter from './routes/catalog.route.js';
+import webhooksRouter from './routes/webhooks.route.js';
 
 // ── Bootstrap services ──────────────────────────────────────
 
@@ -72,6 +60,10 @@ app.get('/health', (_req, res) => {
 // API routes
 app.use('/api/locations', locationsRouter);
 app.use('/api/catalog/categories', categoriesRouter);
+app.use('/api/catalog', catalogRouter);
+
+// Webhook routes (no rate limiting on webhooks)
+app.use('/webhooks/square', webhooksRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 
