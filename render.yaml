@@ -1,0 +1,59 @@
+services:
+  # Backend API Service
+  - type: web
+    name: per-diem-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build -w packages/shared-types && npm run build -w apps/backend
+    startCommand: npm run start -w apps/backend
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SQUARE_ACCESS_TOKEN
+        sync: false
+      - key: SQUARE_LOCATION_ID
+        sync: false
+      - key: SQUARE_ENVIRONMENT
+        value: sandbox
+      - key: CACHE_PROVIDER
+        value: redis
+      - key: CACHE_TTL_SECONDS
+        value: 300
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: per-diem-frontend
+          property: host
+
+  # Frontend Static Site
+  - type: web
+    name: per-diem-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build -w packages/shared-types && npm run build -w apps/frontend
+    staticPublishPath: apps/frontend/dist
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: per-diem-backend
+          property: host
