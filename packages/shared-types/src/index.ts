@@ -48,6 +48,7 @@ export interface SquareCatalogCategory {
   id: string;
   category_data: {
     name: string;
+    category_type?: 'REGULAR_CATEGORY' | 'MENU_CATEGORY';
   };
 }
 
