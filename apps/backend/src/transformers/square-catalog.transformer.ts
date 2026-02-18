@@ -3,6 +3,7 @@ import type {
   SquareCatalogItem,
   SquareCatalogCategory,
   SquareCatalogImage,
+  SquareCatalogVariation,
   Category,
   MenuItem,
   MenuItemVariation,
@@ -185,7 +186,7 @@ export function transformCatalogItem(
     : null;
 
   // Transform variations
-  const variations: MenuItemVariation[] = (item.item_data.variations ?? []).map((v) => ({
+  const variations: MenuItemVariation[] = (item.item_data.variations ?? []).map((v: SquareCatalogVariation) => ({
     id: v.id,
     name: v.item_variation_data.name,
     priceDollars: (v.item_variation_data.price_money?.amount ?? 0) / 100,
