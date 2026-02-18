@@ -74,6 +74,7 @@ export class RedisCacheProvider implements CacheProvider {
     this.client = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
       lazyConnect: true,
+      tls: redisUrl.includes('upstash.io') ? {} : undefined, // Enable TLS for Upstash
     });
 
     this.client.on('error', (err) => {

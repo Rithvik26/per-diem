@@ -7,10 +7,10 @@ test.describe('Menu Flow', () => {
 
   test('should load locations and select one', async ({ page }) => {
     // Wait for location selector to load
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
 
     // Check that locations are loaded
-    const locationSelect = page.locator('select[aria-label="Select location"]');
+    const locationSelect = page.locator('select#location-select');
     await expect(locationSelect).toBeVisible();
 
     // Get all options
@@ -27,8 +27,8 @@ test.describe('Menu Flow', () => {
 
   test('should load menu items after location selected', async ({ page }) => {
     // Select location
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    const locationSelect = page.locator('select[aria-label="Select location"]');
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    const locationSelect = page.locator('select#location-select');
     await locationSelect.selectOption({ index: 1 });
 
     // Wait for loading to finish and menu items to appear
@@ -41,8 +41,8 @@ test.describe('Menu Flow', () => {
 
   test('should display items grouped by category', async ({ page }) => {
     // Select location
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    await page.locator('select[aria-label="Select location"]').selectOption({ index: 1 });
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    await page.locator('select#location-select').selectOption({ index: 1 });
 
     // Wait for content to load
     await page.waitForTimeout(2000);
@@ -57,8 +57,8 @@ test.describe('Menu Flow', () => {
 
   test('should filter items with search', async ({ page }) => {
     // Select location
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    await page.locator('select[aria-label="Select location"]').selectOption({ index: 1 });
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    await page.locator('select#location-select').selectOption({ index: 1 });
 
     // Wait for menu to load
     await page.waitForSelector('[data-testid="menu-item"]', { timeout: 15000 });
@@ -109,8 +109,8 @@ test.describe('Menu Flow', () => {
     await page.goto('http://localhost:5173');
 
     // Select location (this should trigger error)
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    await page.locator('select[aria-label="Select location"]').selectOption({ index: 1 });
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    await page.locator('select#location-select').selectOption({ index: 1 });
 
     // Wait for error message to appear
     await page.waitForSelector('text=/error|failed|retry/i', { timeout: 10000 });
@@ -156,8 +156,8 @@ test.describe('Menu Flow', () => {
     await page.goto('http://localhost:5173');
 
     // Select location
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    await page.locator('select[aria-label="Select location"]').selectOption({ index: 1 });
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    await page.locator('select#location-select').selectOption({ index: 1 });
 
     // Wait for empty state
     await page.waitForTimeout(2000);
@@ -171,8 +171,8 @@ test.describe('Menu Flow', () => {
     await page.goto('http://localhost:5173');
 
     // Select location
-    await page.waitForSelector('select[aria-label="Select location"]', { timeout: 10000 });
-    const locationSelect = page.locator('select[aria-label="Select location"]');
+    await page.waitForSelector('select#location-select', { timeout: 10000 });
+    const locationSelect = page.locator('select#location-select');
     await locationSelect.selectOption({ index: 1 });
 
     // Loading skeleton should appear briefly
