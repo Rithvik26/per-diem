@@ -36,7 +36,11 @@ export function extractCategoriesFromRelatedObjects(
   for (const obj of relatedObjects) {
     if (obj.type === 'CATEGORY') {
       const category = obj as SquareCatalogCategory;
-      categoryMap.set(category.id, category.category_data.name);
+      // Filter for REGULAR_CATEGORY only to avoid duplicates from menu system
+      // See: https://developer.squareup.com/docs/catalog-api/categorize-catalog-items
+      if (!category.category_data.category_type || category.category_data.category_type === 'REGULAR_CATEGORY') {
+        categoryMap.set(category.id, category.category_data.name);
+      }
     }
   }
 
@@ -91,7 +95,11 @@ export function findCategoryName(
 ): string | null {
   for (const obj of relatedObjects) {
     if (obj.type === 'CATEGORY' && obj.id === categoryId) {
-      return (obj as SquareCatalogCategory).category_data.name;
+      const category = obj as SquareCatalogCategory;
+      // Filter for REGULAR_CATEGORY only to avoid duplicates from menu system
+      if (!category.category_data.category_type || category.category_data.category_type === 'REGULAR_CATEGORY') {
+        return category.category_data.name;
+      }
     }
   }
   return null;
@@ -229,12 +237,17 @@ export function groupItemsByCategory(
   const categoryGroups: CategoryGroup[] = [];
 
   for (const [categoryName, items] of categoryMap.entries()) {
-    // Find category ID from related_objects
+    // Find category ID from related_objects (REGULAR_CATEGORY only)
     let categoryId = '';
     for (const obj of relatedObjects) {
-      if (obj.type === 'CATEGORY' && (obj as SquareCatalogCategory).category_data.name === categoryName) {
-        categoryId = obj.id;
-        break;
+      if (obj.type === 'CATEGORY') {
+        const category = obj as SquareCatalogCategory;
+        // Filter for REGULAR_CATEGORY only to avoid duplicates from menu system
+        if ((!category.category_data.category_type || category.category_data.category_type === 'REGULAR_CATEGORY')
+            && category.category_data.name === categoryName) {
+          categoryId = obj.id;
+          break;
+        }
       }
     }
 

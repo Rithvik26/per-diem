@@ -10,17 +10,19 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "tsx src/scripts/seedCatalog.ts"
   },
   "dependencies": {
     "@per-diem/shared-types": "*",
+    "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.1",
-    "axios": "^1.7.7",
     "ioredis": "^5.4.1",
     "node-cache": "^5.1.2",
+    "square": "^44.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
