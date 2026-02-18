@@ -18,6 +18,10 @@ const squareClient = createSquareClient(config.SQUARE_BASE_URL, config.SQUARE_AC
 
 // Make services available to route handlers via app.locals
 const app = express();
+
+// Trust proxy for proper client IP detection in production (Render, Railway, etc.)
+app.set('trust proxy', 1);
+
 app.locals.cache = cache;
 app.locals.squareClient = squareClient;
 app.locals.config = config;
