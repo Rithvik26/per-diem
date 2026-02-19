@@ -9,7 +9,7 @@
 
 ## 🌐 Live Deployment
 
-**Frontend:** https://per-diem-1.onrender.com
+**Live App:** https://per-diem-1.onrender.com
 **Backend API:** https://per-diem.onrender.com
 **Health Check:** https://per-diem.onrender.com/health
 
