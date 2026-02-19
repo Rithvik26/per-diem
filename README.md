@@ -21,10 +21,6 @@ The Playwright suite includes resilience tests that intentionally simulate netwo
 
 Some WebKit mobile timing tests and forced network-failure simulations are flaky in CI environments due to sandbox latency and Render cold starts, but the production application behavior is verified manually on real browsers.
 
-**Test Results:** 31/40 tests passing
-- ✅ All core functionality validated across 5 browsers
-- ✅ Production app verified working on live deployment
-- ❌ Resilience/chaos tests expected to be environment-sensitive
 
 ## 📋 Assignment Requirements Met
 
